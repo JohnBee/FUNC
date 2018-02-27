@@ -79,6 +79,20 @@ padTriangle n (x:xs) = (padding n x) : (padTriangle (n-1) xs)
   where
     padding i s = concat (replicate i " ") ++ s
 
---trol :: Tri a -> Tri a
--- rotate nth positional item
-rot :: Int -> [[a]] -> [[a]]
+trol :: Tri a -> Tri a
+trol (Tri a) = Tri (f a)
+  where
+    f [] = []
+    f (x:xs) = (f $ map tail xs) ++ [(map head (x:xs))] 
+
+tror :: Tri a -> Tri a
+tror (Tri a) = Tri (f a)
+  where
+    f [] = []
+    f (x:xs) = (f $ map init xs) ++ [reverse (map last (x:xs))] 
+
+
+sublists :: [a] -> [[a]]
+sublists [] = [[]]
+sublists (x:xs) = (sublists xs) ++ (map (x:) (sublists xs))
+ 
