@@ -1,5 +1,6 @@
 import Prelude hiding (take, drop, zipWith)
-
+import Parse
+import Data.Char (isAlpha)
 -- take drop
 take, drop :: Int -> [a] -> [a]
 take _ [] = []
@@ -95,4 +96,38 @@ tror (Tri a) = Tri (f a)
 sublists :: [a] -> [[a]]
 sublists [] = [[]]
 sublists (x:xs) = (sublists xs) ++ (map (x:) (sublists xs))
- 
+
+prefixes, suffixes :: [a] -> [[a]]
+prefixes [] = []
+prefixes xs = [xs] ++ prefixes (init xs)
+
+suffixes [] = []
+suffixes xs = [xs] ++ suffixes (tail xs)
+
+segments :: [a] -> [[a]]
+segments [] = []
+segments (x:xs) = concat $ map suffixes (prefixes (x:xs))
+
+parts :: [a] -> [[[a]]]
+parts [] = []
+parts [x] = [[[x]]]
+parts (x:xs) = [p' | p@(ys:etc) <- parts xs, p' <- [[x]:p, (x:ys):etc]] 
+
+--parser combinators
+data Prog = Prog [Eqn]
+data Eqn = Eqn Name [Pat] Exp
+data Exp = Nil | Var Name | App Name [Exp] | Cons Exp Exp
+data Pat = PNil | PVar Name | PCons Name Name deriving (Show)
+type Name = String
+
+name :: Parser Name
+name = many1 alphas
+
+alphas :: Parser Char
+alphas = sat isAlpha
+
+pat :: Parser Pat
+pat = PNil ... string "[]" .|. PVar .:. name .|. PCons  .:. lname ..* char ':' .*. rname
+  where 
+    lname = (char '(' *.. name)
+    rname = (name ..* char ')')
