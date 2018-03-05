@@ -115,15 +115,10 @@ segments :: [a] -> [[a]]
 segments [] = []
 segments (x:xs) = concat $ map suffixes (prefixes (x:xs))
 
---parts :: [a] -> [[[a]]]
---parts [] = []
---parts [x] = [[[x]]]
---parts (x:xs) = [p' | p@(ys:etc) <- parts xs, p' <- [[x]:p, (x:ys):etc]] 
 parts :: [a] -> [[[a]]]
 parts [] = []
 parts (x:xs) = (addPart [x] (parts xs)) ++ (consPart [x] (parts xs))
 
---parts (x:xs) = map ([x]++) xs
 addPart :: [a] -> [[[a]]] -> [[[a]]]
 addPart x xs = map ([x]++) xs
 
@@ -135,9 +130,16 @@ consPart [a] xs = map (t a) xs
 perms :: [a] -> [[a]]
 perms [] = []
 perms [a] = [[a]]
-mIns :: a -> [a] -> [[a]]
---mIns [] b = [b]
+perms (x:xs) = foldr (++) [] $ map (ins x) (perms xs)
+ubox :: [a] -> a 
+ubox [a] = a
 
+ins :: a -> [a] -> [[a]]
+ins x xs = (mIns []) x xs
+	where 
+	mIns :: [a] -> a -> [a] -> [[a]]
+	mIns xs x [] = [xs ++ [x]]
+	mIns xs x ys = [xs ++ [x] ++ ys] ++ mIns (xs ++ [(head ys)]) x (tail ys)
 
 --parser combinators
 data Prog = Prog [Eqn]
