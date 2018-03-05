@@ -1,4 +1,4 @@
-import Prelude hiding (take, drop, zipWith)
+import Prelude hiding (take, drop, zipWith, exp)
 import Parse
 import Data.Char (isAlpha)
 -- take drop
@@ -50,6 +50,13 @@ sort xs = if xs == (singleSort xs)
       singleSort (x:y:xs) = if (x <= y)
                             then x : (sort (y:xs))
                             else (sort [x,y]) ++ (sort xs)
+
+xsort :: Ord a => [a] -> [a]
+xsort [] = []
+xsort (x:xs) = xsort(lsort) ++ [x] ++ xsort(rsort)
+    where
+    lsort = [a | a <- xs, a<=x]
+    rsort = [a | a <- xs, a>x]
 
 -- zipWith
 zipWith :: (a->b->c) -> [a] -> [b] -> [c]
@@ -108,15 +115,34 @@ segments :: [a] -> [[a]]
 segments [] = []
 segments (x:xs) = concat $ map suffixes (prefixes (x:xs))
 
+--parts :: [a] -> [[[a]]]
+--parts [] = []
+--parts [x] = [[[x]]]
+--parts (x:xs) = [p' | p@(ys:etc) <- parts xs, p' <- [[x]:p, (x:ys):etc]] 
 parts :: [a] -> [[[a]]]
 parts [] = []
-parts [x] = [[[x]]]
-parts (x:xs) = [p' | p@(ys:etc) <- parts xs, p' <- [[x]:p, (x:ys):etc]] 
+parts (x:xs) = (addPart [x] (parts xs)) ++ (consPart [x] (parts xs))
+
+--parts (x:xs) = map ([x]++) xs
+addPart :: [a] -> [[[a]]] -> [[[a]]]
+addPart x xs = map ([x]++) xs
+
+consPart :: [a] -> [[[a]]] -> [[[a]]]
+consPart a [] =[[a]]
+consPart [a] xs = map (t a) xs
+    where t y (x:xs) = (y:x) : (xs)
+
+perms :: [a] -> [[a]]
+perms [] = []
+perms [a] = [[a]]
+mIns :: a -> [a] -> [[a]]
+--mIns [] b = [b]
+
 
 --parser combinators
 data Prog = Prog [Eqn]
 data Eqn = Eqn Name [Pat] Exp
-data Exp = Nil | Var Name | App Name [Exp] | Cons Exp Exp
+data Exp = Nil | Var Name | App Name [Exp] | Cons Exp Exp deriving (Show)
 data Pat = PNil | PVar Name | PCons Name Name deriving (Show)
 type Name = String
 
@@ -126,8 +152,14 @@ name = many1 alphas
 alphas :: Parser Char
 alphas = sat isAlpha
 
+bracket :: Parser a -> Parser a
+bracket a = char '(' *.. a ..* char ')'
+
 pat :: Parser Pat
 pat = PNil ... string "[]" .|. PVar .:. name .|. PCons  .:. lname ..* char ':' .*. rname
   where 
     lname = (char '(' *.. name)
     rname = (name ..* char ')')
+
+exp :: Parser Exp
+exp = (App .:. name) .*. bracket (many1 (char ':' *.. exp)) .|. Var .:. name .|. Nil ... string "[]" 
