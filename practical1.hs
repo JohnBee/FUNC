@@ -131,15 +131,34 @@ perms :: [a] -> [[a]]
 perms [] = []
 perms [a] = [[a]]
 perms (x:xs) = foldr (++) [] $ map (ins x) (perms xs)
-ubox :: [a] -> a 
-ubox [a] = a
 
 ins :: a -> [a] -> [[a]]
 ins x xs = (mIns []) x xs
-	where 
-	mIns :: [a] -> a -> [a] -> [[a]]
-	mIns xs x [] = [xs ++ [x]]
-	mIns xs x ys = [xs ++ [x] ++ ys] ++ mIns (xs ++ [(head ys)]) x (tail ys)
+ where 
+ mIns :: [a] -> a -> [a] -> [[a]]
+ mIns xs x [] = [xs ++ [x]]
+ mIns xs x ys = [xs ++ [x] ++ ys] ++ mIns (xs ++ [(head ys)]) x (tail ys)
+
+
+change :: [Int] -> Int -> [[Int]]
+change cs 0  = [[]]
+change cs m = [c : b | c <- cs, c <= m, b <- change (filter (>= c) cs) (m-c)]
+
+--Practical 2
+pascal :: Tri Integer
+pascal = Tri (f)
+    where 
+    f :: [[Integer]] 
+    f = [1] : map nextRow (f)
+
+nextRow :: [Integer] -> [Integer]
+nextRow xs = 1 : scanSum xs
+    where
+    scanSum :: [Integer] -> [Integer]
+    scanSum [] = []
+    scanSum (x:xs) = sum (take 2 (x:xs)) : (scanSum xs)
+    
+
 
 --parser combinators
 data Prog = Prog [Eqn]
